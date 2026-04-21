@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interest Explorer ✨</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0f4ff;
+      --surface: #ffffff;
+      --primary: #7c6ef2;
+      --primary-light: #a99bf7;
+      --accent: #ff7eb3;
+      --accent2: #4ecdc4;
+      --accent3: #ffe66d;
+      --text: #2d2d44;
+      --text-muted: #7a7a9a;
+      --radius: 20px;
+      --shadow: 0 8px 32px rgba(124,110,242,0.12);
+      --shadow-lg: 0 16px 48px rgba(124,110,242,0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(124,110,242,0.1) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -200px; left: -200px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(78,205,196,0.08) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+      animation: fadeSlideIn 0.4s ease-out;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Mascot ─────────────────────────────── */
+    .mascot {
+      font-size: 80px;
+      display: block;
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 8px 16px rgba(124,110,242,0.22));
+    }
+
+    .mascot-small {
+      font-size: 38px;
+      animation: float 3s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+
+    /* ── Typography ─────────────────────────── */
+    h1 {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(36px, 8vw, 58px);
+      color: var(--primary);
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    h2 {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(22px, 5vw, 34px);
+      color: var(--text);
+      text-align: center;
+    }
+
+    p {
+      font-size: clamp(16px, 3vw, 19px);
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    /* ── Speech bubble ──────────────────────── */
+    .bubble {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 11px 18px;
+      display: inline-block;
+      box-shadow: var(--shadow);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-muted);
+      position: relative;
+      max-width: 320px;
+      text-align: left;
+    }
+
+    .bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -10px; left: 22px;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid var(--surface);
+    }
+
+    /* ── Buttons ────────────────────────────── */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, #9b8ef5 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 18px 40px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 6px 22px rgba(124,110,242,0.35);
+      width: 100%;
+      max-width: 320px;
+      letter-spacing: 0.4px;
+    }
+
+    .btn-primary:hover  { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(124,110,242,0.45); }
+    .btn-primary:active { transform: translateY(1px); }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--primary);
+      border: 2.5px solid var(--primary-light);
+      border-radius: 50px;
+      padding: 14px 32px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* ── Progress ───────────────────────────── */
+    .progress-header {
+      width: 100%;
+      max-width: 540px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .progress-label {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 10px;
+      background: #e4e4f5;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 10px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ══════════════════════════════════════════
+       WELCOME
+    ══════════════════════════════════════════ */
+    #welcome { text-align: center; gap: 20px; }
+
+    .welcome-card {
+      background: var(--surface);
+      border-radius: 28px;
+      padding: 44px 32px 36px;
+      max-width: 460px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .name-input {
+      width: 100%;
+      padding: 16px 20px;
+      border: 2.5px solid #e0e0f0;
+      border-radius: 16px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      text-align: center;
+    }
+
+    .name-input::placeholder { color: #ccc; font-weight: 600; }
+
+    .name-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(124,110,242,0.12);
+    }
+
+    /* ══════════════════════════════════════════
+       VIBE CHECK
+    ══════════════════════════════════════════ */
+    #vibecheck { gap: 22px; max-width: 560px; width: 100%; margin: 0 auto; }
+
+    .mascot-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+    }
+
+    .question-card {
+      background: var(--surface);
+      border-radius: 28px;
+      padding: 32px 26px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .question-text {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(20px, 4vw, 27px);
+      color: var(--text);
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .vibe-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .vibe-option {
+      background: var(--bg);
+      border: 3px solid #e0e0f0;
+      border-radius: 20px;
+      padding: 20px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 110px;
+      max-width: 170px;
+      text-align: center;
+    }
+
+    .vibe-option:hover {
+      border-color: var(--primary-light);
+      background: white;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(124,110,242,0.14);
+    }
+
+    .vibe-option.selected {
+      border-color: var(--primary);
+      background: linear-gradient(135deg, rgba(124,110,242,0.07), rgba(169,155,247,0.11));
+      transform: scale(1.04) translateY(-2px);
+      box-shadow: 0 8px 24px rgba(124,110,242,0.2);
+    }
+
+    .vibe-emoji {
+      font-size: 42px;
+      display: block;
+      transition: transform 0.2s;
+    }
+
+    .vibe-option:hover .vibe-emoji,
+    .vibe-option.selected .vibe-emoji { transform: scale(1.18); }
+
+    .vibe-label { font-weight: 800; font-size: 15px; color: var(--text); }
+    .vibe-sub   { font-size: 13px; color: var(--text-muted); }
+
+    /* ══════════════════════════════════════════
+       SWIPE
+    ══════════════════════════════════════════ */
+    #swipe { gap: 18px; max-width: 460px; width: 100%; margin: 0 auto; }
+
+    .activity-card {
+      background: var(--surface);
+      border-radius: 28px;
+      padding: 40px 30px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+      min-height: 270px;
+      justify-content: center;
+      will-change: transform, opacity;
+    }
+
+    .activity-card.exit-left  { animation: exitLeft  0.28s ease-in forwards; }
+    .activity-card.exit-right { animation: exitRight 0.28s ease-in forwards; }
+    .activity-card.enter      { animation: enterCard 0.3s cubic-bezier(0.34,1.4,0.64,1) forwards; }
+
+    @keyframes exitLeft  { to { transform: translateX(-110px) rotate(-6deg); opacity: 0; } }
+    @keyframes exitRight { to { transform: translateX(110px)  rotate(6deg);  opacity: 0; } }
+    @keyframes enterCard { from { transform: scale(0.88) translateY(12px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+    .activity-emoji { font-size: 84px; display: block; line-height: 1; }
+
+    .activity-name {
+      font-family: 'Fredoka One', cursive;
+      font-size: 30px;
+      color: var(--text);
+    }
+
+    .activity-desc { font-size: 17px; color: var(--text-muted); max-width: 300px; }
+
+    .swipe-buttons {
+      display: flex;
+      gap: 14px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .btn-nope {
+      flex: 1;
+      background: white;
+      border: 3px solid #ffcdd2;
+      border-radius: 20px;
+      padding: 18px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 19px;
+      cursor: pointer;
+      color: #e57373;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .btn-nope:hover { background: #fff3f3; transform: scale(1.04); box-shadow: 0 6px 18px rgba(229,115,115,0.18); }
+
+    .btn-like {
+      flex: 2;
+      background: linear-gradient(135deg, #ff7eb3, #ff5ea3);
+      border: none;
+      border-radius: 20px;
+      padding: 18px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 19px;
+      cursor: pointer;
+      color: white;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      box-shadow: 0 6px 20px rgba(255,126,179,0.28);
+    }
+
+    .btn-like:hover { transform: scale(1.04) translateY(-2px); box-shadow: 0 10px 28px rgba(255,126,179,0.38); }
+
+    /* Progress dots */
+    .swipe-dots {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 400px;
+    }
+
+    .dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: #e0e0f0;
+      transition: all 0.25s;
+      flex-shrink: 0;
+    }
+
+    .dot.liked   { background: var(--accent); }
+    .dot.skipped { background: #d0d0e8; }
+    .dot.current { background: var(--primary); width: 22px; border-radius: 5px; }
+
+    /* Encourage toast */
+    .toast {
+      position: fixed;
+      top: 20px; left: 50%;
+      transform: translateX(-50%) translateY(-70px);
+      background: var(--primary);
+      color: white;
+      padding: 13px 28px;
+      border-radius: 50px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 18px;
+      box-shadow: 0 8px 24px rgba(124,110,242,0.35);
+      z-index: 300;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ══════════════════════════════════════════
+       FINAL PICK
+    ══════════════════════════════════════════ */
+    #finalpick { gap: 22px; max-width: 600px; width: 100%; margin: 0 auto; }
+
+    .pick-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+      width: 100%;
+    }
+
+    .pick-card {
+      background: var(--surface);
+      border: 3px solid #e0e0f0;
+      border-radius: 20px;
+      padding: 18px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      position: relative;
+    }
+
+    .pick-card:hover {
+      border-color: var(--primary-light);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+
+    .pick-card.selected {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(255,126,179,0.07), rgba(255,94,163,0.11));
+      box-shadow: 0 6px 20px rgba(255,126,179,0.2);
+    }
+
+    .pick-card.selected::after {
+      content: '⭐';
+      position: absolute;
+      top: -12px; right: -8px;
+      font-size: 22px;
+      animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0) rotate(-20deg); }
+      to   { transform: scale(1) rotate(0deg); }
+    }
+
+    .pick-emoji { font-size: 42px; }
+    .pick-name  { font-weight: 800; font-size: 13px; color: var(--text); }
+
+    .counter-badge {
+      background: var(--primary);
+      color: white;
+      border-radius: 50px;
+      padding: 10px 28px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    /* ══════════════════════════════════════════
+       RESULTS
+    ══════════════════════════════════════════ */
+    #results { gap: 26px; max-width: 540px; width: 100%; margin: 0 auto; text-align: center; }
+
+    .results-title {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(28px, 6vw, 46px);
+      color: var(--primary);
+    }
+
+    .results-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+
+    .result-card {
+      background: var(--surface);
+      border-radius: 22px;
+      padding: 20px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--shadow);
+      text-align: left;
+      animation: slideUp 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
+    }
+
+    .result-card:nth-child(1) { animation-delay: 0.1s; }
+    .result-card:nth-child(2) { animation-delay: 0.22s; }
+    .result-card:nth-child(3) { animation-delay: 0.34s; }
+    .result-card:nth-child(4) { animation-delay: 0.46s; }
+    .result-card:nth-child(5) { animation-delay: 0.58s; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px) scale(0.94); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .result-emoji { font-size: 52px; flex-shrink: 0; }
+
+    .result-info { flex: 1; }
+
+    .result-name {
+      font-family: 'Fredoka One', cursive;
+      font-size: 22px;
+      color: var(--text);
+    }
+
+    .result-tip { font-size: 14px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+
+    .result-rank {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      font-family: 'Fredoka One', cursive;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Confetti */
+    .confetti-piece {
+      position: fixed;
+      top: -20px;
+      border-radius: 2px;
+      animation: confettiFall linear forwards;
+      pointer-events: none;
+      z-index: 200;
+    }
+
+    @keyframes confettiFall {
+      0%   { top: -20px; opacity: 1; transform: rotate(0deg) translateX(0); }
+      100% { top: 110vh;  opacity: 0; transform: rotate(720deg) translateX(var(--drift)); }
+    }
+
+    /* ── Responsive ─────────────────────────── */
+    @media (max-width: 480px) {
+      .screen.active { padding: 14px 12px; }
+      .welcome-card, .question-card { padding: 24px 16px; }
+      .activity-card { padding: 28px 18px; min-height: 230px; }
+    }
+
+    @media print {
+      body > *:not(#results) { display: none !important; }
+      #results { display: flex !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════ WELCOME ══════════════════ -->
+<div class="screen active" id="welcome">
+  <div class="welcome-card">
+    <span class="mascot">🌟</span>
+    <div class="bubble" id="welcomeBubble">Hi! I'm Sparky! Ready to explore?</div>
+    <h1>Interest Explorer</h1>
+    <p style="text-align:center;font-size:17px;">Find the hobbies YOU love — in just a few minutes!</p>
+    <input type="text" class="name-input" id="nameInput"
+           placeholder="Type your name (optional)"
+           maxlength="20" autocomplete="off"
+           onkeydown="if(event.key==='Enter') startApp()">
+    <button class="btn-primary" onclick="startApp()">Let's Go! 🚀</button>
+    <p style="font-size:13px;color:#bbb;margin-top:-8px;">Takes about 5–7 minutes</p>
+  </div>
+</div>
+
+<!-- ══════════════════ VIBE CHECK ══════════════════ -->
+<div class="screen" id="vibecheck">
+  <div class="progress-header">
+    <div class="progress-label" id="vibeLabel">Question 1 of 5</div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="vibeBar" style="width:20%"></div>
+    </div>
+  </div>
+  <div class="mascot-row">
+    <span class="mascot-small">🌟</span>
+    <div class="bubble" id="vibeBubble">Let's learn what you like!</div>
+  </div>
+  <div class="question-card" id="qCard">
+    <div class="question-text" id="qText"></div>
+    <div class="vibe-options" id="vibeOpts"></div>
+    <button class="btn-primary" id="vibeNext"
+            onclick="nextVibe()"
+            style="display:none;max-width:220px;font-size:19px;padding:15px 30px;">
+      Next ➜
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════ SWIPE ══════════════════ -->
+<div class="screen" id="swipe">
+  <div class="progress-header" style="max-width:460px;">
+    <div class="progress-label" id="swipeLabel">Card 1 of 25</div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="swipeBar" style="width:0%"></div>
+    </div>
+  </div>
+  <div class="mascot-row">
+    <span class="mascot-small">🌟</span>
+    <div class="bubble" id="swipeBubble">Does this sound fun?</div>
+  </div>
+  <div class="activity-card" id="actCard">
+    <span class="activity-emoji" id="actEmoji">🎨</span>
+    <div class="activity-name" id="actName">Drawing</div>
+    <div class="activity-desc" id="actDesc">Create pictures with pencils and pens.</div>
+  </div>
+  <div class="swipe-buttons">
+    <button class="btn-nope" id="nopeBtn" onclick="swipe(false)">👎 Nope</button>
+    <button class="btn-like" id="likeBtn" onclick="swipe(true)">❤️ Sounds cool!</button>
+  </div>
+  <div class="swipe-dots" id="swipeDots"></div>
+</div>
+
+<!-- ══════════════════ FINAL PICK ══════════════════ -->
+<div class="screen" id="finalpick">
+  <div class="progress-header" style="max-width:600px;">
+    <div class="progress-label">Almost there! 🎉</div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" style="width:88%"></div>
+    </div>
+  </div>
+  <span class="mascot-small">🌟</span>
+  <h2 id="fpTitle">Pick your TOP 5!</h2>
+  <p style="text-align:center;max-width:420px;">Tap the ones you like the most. You can pick up to 5.</p>
+  <div class="counter-badge" id="fpCounter">0 / 5 chosen</div>
+  <div class="pick-grid" id="fpGrid"></div>
+  <button class="btn-primary" id="fpDoneBtn"
+          onclick="showResults()"
+          style="display:none;">
+    See My Interests! ✨
+  </button>
+</div>
+
+<!-- ══════════════════ RESULTS ══════════════════ -->
+<div class="screen" id="results">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <span style="font-size:60px;">🏆</span>
+    <div class="results-title" id="resTitle">Your Top Interests!</div>
+    <p id="resSub" style="text-align:center;"></p>
+  </div>
+  <div class="results-grid" id="resGrid"></div>
+  <div style="display:flex;flex-direction:column;gap:12px;width:100%;align-items:center;max-width:340px;">
+    <button class="btn-primary"
+            style="background:linear-gradient(135deg,#4ecdc4,#3ab8af);"
+            onclick="window.print()">
+      🖨️ Save / Print
+    </button>
+    <button class="btn-secondary" onclick="restartApp()">↺ Start Over</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  ACTIVITY DATA
+// ─────────────────────────────────────────────
+const ACTIVITIES = [
+  { id:'drawing',     emoji:'🎨', name:'Drawing',             desc:'Create pictures with pencils, pens, or markers.',                    tip:'Ask for a sketchbook and some colored pencils to start!',                  tags:{loc:'indoor', soc:'solo',   nrg:'quiet',  typ:'making',      skl:'hands'} },
+  { id:'coding',      emoji:'💻', name:'Coding',              desc:'Write code to make games, apps, and websites.',                      tip:'Try Scratch at scratch.mit.edu — it\'s free and super fun!',               tags:{loc:'indoor', soc:'solo',   nrg:'quiet',  typ:'making',      skl:'brain'} },
+  { id:'cooking',     emoji:'🍳', name:'Cooking',             desc:'Make yummy food and discover new recipes.',                          tip:'Ask a grown-up to help you cook one easy recipe this week!',               tags:{loc:'indoor', soc:'either', nrg:'mix',    typ:'making',      skl:'hands'} },
+  { id:'lego',        emoji:'🧱', name:'Building (Lego)',     desc:'Design and build amazing things with blocks!',                       tip:'Start with a beginner Lego set and see what you can create!',             tags:{loc:'indoor', soc:'either', nrg:'quiet',  typ:'making',      skl:'hands'} },
+  { id:'chess',       emoji:'♟️', name:'Chess',               desc:'A strategy game where you try to outsmart your opponent.',           tip:'Download Chess.com — it\'s free and teaches you step by step!',           tags:{loc:'indoor', soc:'social', nrg:'quiet',  typ:'discovering', skl:'brain'} },
+  { id:'soccer',      emoji:'⚽', name:'Soccer',              desc:'Kick a ball and play with a fun team!',                              tip:'Find a local park that has pickup games on weekends.',                     tags:{loc:'outdoor',soc:'social', nrg:'active', typ:'discovering', skl:'body'} },
+  { id:'swimming',    emoji:'🏊', name:'Swimming',            desc:'Move through water and learn cool strokes.',                         tip:'Check if your community center has swimming lessons!',                    tags:{loc:'either', soc:'either', nrg:'active', typ:'discovering', skl:'body'} },
+  { id:'photography', emoji:'📸', name:'Photography',         desc:'Capture cool moments with a camera or phone.',                       tip:'Use your family\'s phone to photograph interesting things at home!',      tags:{loc:'both',   soc:'solo',   nrg:'mix',    typ:'making',      skl:'hands'} },
+  { id:'reading',     emoji:'📚', name:'Reading',             desc:'Explore amazing stories and learn new things.',                      tip:'Visit your library and pick 3 books that look interesting!',              tags:{loc:'indoor', soc:'solo',   nrg:'quiet',  typ:'discovering', skl:'brain'} },
+  { id:'writing',     emoji:'✍️', name:'Writing Stories',     desc:'Make up your own characters and adventures.',                        tip:'Start a story journal — write just 5 sentences today!',                   tags:{loc:'indoor', soc:'solo',   nrg:'quiet',  typ:'making',      skl:'brain'} },
+  { id:'acting',      emoji:'🎭', name:'Acting / Drama',      desc:'Perform in plays and bring characters to life!',                    tip:'Look for a local youth theater or drama club to join!',                   tags:{loc:'indoor', soc:'social', nrg:'active', typ:'making',      skl:'body'} },
+  { id:'singing',     emoji:'🎤', name:'Singing',             desc:'Use your voice to make music and perform.',                          tip:'Sing along to your favorite songs — that\'s how you practice!',           tags:{loc:'indoor', soc:'either', nrg:'active', typ:'making',      skl:'body'} },
+  { id:'instruments', emoji:'🎸', name:'Playing Music',       desc:'Learn guitar, piano, drums, or another instrument.',                tip:'Ask about music lessons at school or your local music store!',            tags:{loc:'indoor', soc:'either', nrg:'mix',    typ:'making',      skl:'hands'} },
+  { id:'gardening',   emoji:'🌱', name:'Gardening',           desc:'Grow plants and flowers from tiny seeds!',                          tip:'Start with a small pot of herbs on a sunny windowsill!',                  tags:{loc:'outdoor',soc:'either', nrg:'mix',    typ:'making',      skl:'hands'} },
+  { id:'birdwatch',   emoji:'🐦', name:'Birdwatching',        desc:'Spot and identify birds in your neighborhood.',                     tip:'Download the Merlin Bird ID app — it\'s free and totally cool!',         tags:{loc:'outdoor',soc:'either', nrg:'quiet',  typ:'discovering', skl:'brain'} },
+  { id:'hiking',      emoji:'🥾', name:'Hiking',              desc:'Explore trails through nature and find cool spots!',                tip:'Find a local nature trail and go for a short walk this weekend!',         tags:{loc:'outdoor',soc:'either', nrg:'active', typ:'discovering', skl:'body'} },
+  { id:'rocks',       emoji:'🪨', name:'Rock Collecting',     desc:'Find, sort, and learn about different kinds of rocks.',             tip:'Look up the 10 most common rocks in your area to start!',                 tags:{loc:'outdoor',soc:'solo',   nrg:'mix',    typ:'discovering', skl:'hands'} },
+  { id:'origami',     emoji:'🦢', name:'Origami',             desc:'Fold paper into animals, shapes, and cool designs.',               tip:'Search "origami for beginners" on YouTube — so many free tutorials!',    tags:{loc:'indoor', soc:'solo',   nrg:'quiet',  typ:'making',      skl:'hands'} },
+  { id:'sewing',      emoji:'🧵', name:'Sewing / Knitting',   desc:'Make clothes, stuffed animals, or cool accessories.',              tip:'Ask a family member to teach you a simple stitch!',                       tags:{loc:'indoor', soc:'either', nrg:'quiet',  typ:'making',      skl:'hands'} },
+  { id:'astronomy',   emoji:'🔭', name:'Astronomy',           desc:'Learn about stars, planets, and the universe!',                    tip:'Download the Star Walk app to identify stars at night!',                  tags:{loc:'outdoor',soc:'either', nrg:'quiet',  typ:'discovering', skl:'brain'} },
+  { id:'robotics',    emoji:'🤖', name:'Robotics',            desc:'Build and program robots to do cool things!',                      tip:'Look for a LEGO Mindstorms or robotics club in your area!',               tags:{loc:'indoor', soc:'social', nrg:'mix',    typ:'making',      skl:'brain'} },
+  { id:'videogames',  emoji:'🎮', name:'Video Games',         desc:'Play and even design your own games!',                             tip:'Try making your own level in Roblox Studio — it\'s free!',                tags:{loc:'indoor', soc:'either', nrg:'mix',    typ:'discovering', skl:'brain'} },
+  { id:'boardgames',  emoji:'🎲', name:'Board Games',         desc:'Play strategy and adventure games with friends.',                  tip:'Ask for a beginner strategy game at your local game shop!',               tags:{loc:'indoor', soc:'social', nrg:'quiet',  typ:'discovering', skl:'brain'} },
+  { id:'anime',       emoji:'✏️', name:'Drawing Anime',       desc:'Draw characters in the Japanese anime art style.',                 tip:'Search "how to draw anime eyes" on YouTube to get started!',             tags:{loc:'indoor', soc:'solo',   nrg:'quiet',  typ:'making',      skl:'hands'} },
+  { id:'animals',     emoji:'🐾', name:'Caring for Animals',  desc:'Learn about pets and how to look after them.',                     tip:'Ask about volunteering at your local animal shelter!',                    tags:{loc:'both',   soc:'social', nrg:'mix',    typ:'discovering', skl:'hands'} },
+  { id:'dance',       emoji:'💃', name:'Dancing',             desc:'Move your body to music in awesome ways!',                         tip:'Look for beginner dance classes near you — many offer a free trial!',     tags:{loc:'indoor', soc:'either', nrg:'active', typ:'making',      skl:'body'} },
+  { id:'martialarts', emoji:'🥋', name:'Martial Arts',        desc:'Learn karate or taekwondo — get strong and focused.',             tip:'Most gyms offer a free first class — give it a try!',                     tags:{loc:'indoor', soc:'social', nrg:'active', typ:'discovering', skl:'body'} },
+  { id:'magic',       emoji:'🪄', name:'Magic Tricks',        desc:'Learn cool illusions to impress your friends!',                   tip:'Search "5 easy magic tricks for beginners" on YouTube!',                  tags:{loc:'indoor', soc:'social', nrg:'mix',    typ:'making',      skl:'hands'} },
+  { id:'journalism',  emoji:'📰', name:'Interviewing / Journalism', desc:'Ask questions and write stories about real things.',         tip:'Interview a family member and write up their story!',                     tags:{loc:'both',   soc:'social', nrg:'mix',    typ:'making',      skl:'brain'} },
+  { id:'science',     emoji:'🔬', name:'Science Experiments', desc:'Do fun experiments and discover how the world works!',            tip:'Search "easy science experiments for kids" and try one today!',           tags:{loc:'indoor', soc:'either', nrg:'mix',    typ:'discovering', skl:'brain'} },
+];
+
+const QUESTIONS = [
+  {
+    key: 'loc',
+    text: 'Do you like being INDOORS or OUTDOORS?',
+    bubble: 'Think about where you feel most comfortable!',
+    opts: [
+      { val:'indoor',  emoji:'🏠', label:'Indoors',  sub:'cozy inside' },
+      { val:'outdoor', emoji:'🌳', label:'Outdoors', sub:'outside & nature' },
+      { val:'both',    emoji:'🌤️', label:'Both!',    sub:'either is great' },
+    ]
+  },
+  {
+    key: 'soc',
+    text: 'Do you like doing things ALONE or WITH PEOPLE?',
+    bubble: 'No wrong answer — both are totally great!',
+    opts: [
+      { val:'solo',   emoji:'🧘', label:'By myself',    sub:'solo activities' },
+      { val:'social', emoji:'👫', label:'With others',  sub:'team & group fun' },
+      { val:'either', emoji:'😊', label:'Either!',      sub:'depends on the day' },
+    ]
+  },
+  {
+    key: 'nrg',
+    text: 'Do you like QUIET activities or ACTIVE ones?',
+    bubble: 'What feels good for your body?',
+    opts: [
+      { val:'quiet',  emoji:'📖', label:'Quiet & calm',      sub:'relaxing, focused' },
+      { val:'active', emoji:'🏃', label:'Active & moving',   sub:'get up and go!' },
+      { val:'mix',    emoji:'⚡', label:'A mix!',            sub:'some of both' },
+    ]
+  },
+  {
+    key: 'typ',
+    text: 'Do you like MAKING things or DISCOVERING things?',
+    bubble: 'Making = build & create. Discovering = explore & learn!',
+    opts: [
+      { val:'making',     emoji:'🔨', label:'Making things',  sub:'build & create' },
+      { val:'discovering',emoji:'🔍', label:'Discovering',    sub:'explore & learn' },
+      { val:'both',       emoji:'✨', label:'Both!',          sub:'love them equally' },
+    ]
+  },
+  {
+    key: 'skl',
+    text: 'What sounds most fun to use?',
+    bubble: 'Which part of you wants to shine?',
+    opts: [
+      { val:'hands', emoji:'🙌', label:'My hands',       sub:'crafting & building' },
+      { val:'brain', emoji:'🧠', label:'My brain',       sub:'thinking & puzzles' },
+      { val:'body',  emoji:'💪', label:'My whole body',  sub:'sports & movement' },
+    ]
+  },
+];
+
+const ENCOURAGEMENTS = [
+  { toast:'🌟 You\'re doing great!',        bubble:'Keep going — you\'re awesome!' },
+  { toast:'🚀 Amazing choices so far!',     bubble:'You\'re over halfway there!' },
+  { toast:'✨ Superstar alert! 🌟',         bubble:'Nearly done — you\'ve got this!' },
+  { toast:'🎉 Incredible! Keep going!',     bubble:'Just a few more cards!' },
+  { toast:'💫 You\'re almost at the end!',  bubble:'So close — hang in there!' },
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let userName     = 'Explorer';
+let vibeAnswers  = {};
+let vibeIdx      = 0;
+let swipePool    = [];
+let swipeIdx     = 0;
+let liked        = [];
+let finalPicks   = [];
+let swipeLocked  = false;
+
+// ─────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ─────────────────────────────────────────────
+//  WELCOME
+// ─────────────────────────────────────────────
+function startApp() {
+  const raw = document.getElementById('nameInput').value.trim();
+  userName = raw || 'Explorer';
+  document.getElementById('welcomeBubble').textContent =
+    raw ? `Hi ${userName}! Let's find what you love! 🌟` : 'Let\'s find what you love! 🌟';
+
+  vibeAnswers = {};
+  vibeIdx     = 0;
+  liked       = [];
+  finalPicks  = [];
+  renderVibe();
+  show('vibecheck');
+}
+
+// ─────────────────────────────────────────────
+//  VIBE CHECK
+// ─────────────────────────────────────────────
+function renderVibe(dir = 1) {
+  const q = QUESTIONS[vibeIdx];
+  document.getElementById('vibeLabel').textContent  = `Question ${vibeIdx + 1} of ${QUESTIONS.length}`;
+  document.getElementById('vibeBar').style.width    = `${((vibeIdx + 1) / QUESTIONS.length) * 100}%`;
+  document.getElementById('qText').textContent      = q.text;
+  document.getElementById('vibeBubble').textContent = q.bubble;
+  document.getElementById('vibeNext').style.display = 'none';
+
+  const opts = document.getElementById('vibeOpts');
+  opts.innerHTML = '';
+  q.opts.forEach(o => {
+    const el = document.createElement('div');
+    el.className = 'vibe-option';
+    el.innerHTML =
+      `<span class="vibe-emoji">${o.emoji}</span>` +
+      `<span class="vibe-label">${o.label}</span>` +
+      `<span class="vibe-sub">${o.sub}</span>`;
+    el.addEventListener('click', () => {
+      opts.querySelectorAll('.vibe-option').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      vibeAnswers[q.key] = o.val;
+      document.getElementById('vibeNext').style.display = 'block';
+    });
+    opts.appendChild(el);
+  });
+
+  const card = document.getElementById('qCard');
+  card.style.transition = 'none';
+  card.style.opacity    = '0';
+  card.style.transform  = `translateX(${dir * 40}px)`;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    card.style.transition = 'opacity 0.32s ease, transform 0.32s ease';
+    card.style.opacity    = '1';
+    card.style.transform  = 'translateX(0)';
+  }));
+}
+
+function nextVibe() {
+  if (!vibeAnswers[QUESTIONS[vibeIdx].key]) return;
+  const card = document.getElementById('qCard');
+  card.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
+  card.style.opacity    = '0';
+  card.style.transform  = 'translateX(-40px)';
+  setTimeout(() => {
+    vibeIdx++;
+    if (vibeIdx >= QUESTIONS.length) {
+      buildPool();
+      initSwipe();
+      show('swipe');
+    } else {
+      renderVibe(1);
+    }
+  }, 240);
+}
+
+// ─────────────────────────────────────────────
+//  POOL BUILDING
+// ─────────────────────────────────────────────
+function buildPool() {
+  const a = vibeAnswers;
+
+  function score(act) {
+    let s = 0;
+    const t = act.tags;
+    if (a.loc === t.loc || a.loc === 'both' || t.loc === 'both' || t.loc === 'either') s += 2;
+    if (a.soc === t.soc || a.soc === 'either' || t.soc === 'either')                   s += 2;
+    if (a.nrg === t.nrg || a.nrg === 'mix'    || t.nrg === 'mix')                      s += 2;
+    if (a.typ === t.typ || a.typ === 'both'    || t.typ === 'both')                     s += 2;
+    if (a.skl === t.skl)                                                                 s += 3;
+    return s;
+  }
+
+  const scored = ACTIVITIES
+    .map(act => ({ ...act, _score: score(act) }))
+    .sort((a, b) => b._score - a._score || Math.random() - 0.5);
+
+  const top  = scored.slice(0, 6);
+  const rest = scored.slice(6).sort(() => Math.random() - 0.5);
+  swipePool  = [...top, ...rest].slice(0, 24);
+}
+
+// ─────────────────────────────────────────────
+//  SWIPE
+// ─────────────────────────────────────────────
+function initSwipe() {
+  swipeIdx   = 0;
+  liked      = [];
+  swipeLocked = false;
+
+  const dots = document.getElementById('swipeDots');
+  dots.innerHTML = '';
+  swipePool.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' current' : '');
+    d.id = `d${i}`;
+    dots.appendChild(d);
+  });
+
+  renderSwipeCard(false);
+}
+
+function renderSwipeCard(animate = true) {
+  if (swipeIdx >= swipePool.length) { finishSwipe(); return; }
+
+  const act   = swipePool[swipeIdx];
+  const card  = document.getElementById('actCard');
+  const total = swipePool.length;
+
+  document.getElementById('actEmoji').textContent = act.emoji;
+  document.getElementById('actName').textContent  = act.name;
+  document.getElementById('actDesc').textContent  = act.desc;
+  document.getElementById('swipeLabel').textContent = `Card ${swipeIdx + 1} of ${total}`;
+  document.getElementById('swipeBar').style.width   = `${(swipeIdx / total) * 100}%`;
+
+  if (swipeIdx > 0 && swipeIdx % 5 === 0) {
+    const enc = ENCOURAGEMENTS[Math.floor(swipeIdx / 5) % ENCOURAGEMENTS.length];
+    toast(enc.toast);
+    document.getElementById('swipeBubble').textContent = enc.bubble;
+  } else {
+    document.getElementById('swipeBubble').textContent = 'Does this sound fun?';
+  }
+
+  if (animate) {
+    card.classList.remove('exit-left', 'exit-right', 'enter');
+    void card.offsetWidth;
+    card.classList.add('enter');
+  }
+}
+
+function swipe(isLike) {
+  if (swipeLocked) return;
+  swipeLocked = true;
+
+  if (isLike) liked.push(swipePool[swipeIdx]);
+
+  const card = document.getElementById('actCard');
+  card.classList.add(isLike ? 'exit-right' : 'exit-left');
+
+  const prev = document.getElementById(`d${swipeIdx}`);
+  if (prev) { prev.classList.remove('current'); prev.classList.add(isLike ? 'liked' : 'skipped'); }
+
+  swipeIdx++;
+
+  const cur = document.getElementById(`d${swipeIdx}`);
+  if (cur) cur.classList.add('current');
+
+  setTimeout(() => {
+    card.classList.remove('exit-left', 'exit-right');
+    renderSwipeCard(true);
+    swipeLocked = false;
+  }, 290);
+}
+
+function finishSwipe() {
+  if (liked.length === 0) {
+    // If no likes, show all activities for final pick
+    liked = swipePool.slice(0, 10);
+  }
+  if (liked.length <= 5) {
+    finalPicks = liked.slice(0, 5);
+    showResults();
+  } else {
+    showFinalPick();
+  }
+}
+
+// ─────────────────────────────────────────────
+//  FINAL PICK
+// ─────────────────────────────────────────────
+function showFinalPick() {
+  finalPicks = [];
+  document.getElementById('fpTitle').textContent   = `${userName}, pick your TOP 5! ⭐`;
+  document.getElementById('fpCounter').textContent = '0 / 5 chosen';
+  document.getElementById('fpDoneBtn').style.display = 'none';
+
+  const grid = document.getElementById('fpGrid');
+  grid.innerHTML = '';
+  liked.forEach(act => {
+    const card = document.createElement('div');
+    card.className = 'pick-card';
+    card.innerHTML =
+      `<span class="pick-emoji">${act.emoji}</span>` +
+      `<span class="pick-name">${act.name}</span>`;
+    card.addEventListener('click', () => togglePick(act, card));
+    grid.appendChild(card);
+  });
+
+  show('finalpick');
+}
+
+function togglePick(act, card) {
+  const idx = finalPicks.findIndex(a => a.id === act.id);
+  if (idx > -1) {
+    finalPicks.splice(idx, 1);
+    card.classList.remove('selected');
+  } else {
+    if (finalPicks.length >= 5) { toast('⭐ You already picked 5! Remove one first.'); return; }
+    finalPicks.push(act);
+    card.classList.add('selected');
+  }
+  document.getElementById('fpCounter').textContent = `${finalPicks.length} / 5 chosen`;
+  document.getElementById('fpDoneBtn').style.display = finalPicks.length > 0 ? 'block' : 'none';
+}
+
+// ─────────────────────────────────────────────
+//  RESULTS
+// ─────────────────────────────────────────────
+function showResults() {
+  const picks = (finalPicks.length > 0 ? finalPicks : liked).slice(0, 5);
+
+  document.getElementById('resTitle').textContent = `${userName}'s Top Interests! 🏆`;
+  document.getElementById('resSub').textContent   =
+    picks.length > 0
+      ? `You found ${picks.length} awesome thing${picks.length !== 1 ? 's' : ''} to explore!`
+      : 'Great job finishing! Keep exploring to find what you love!';
+
+  const grid = document.getElementById('resGrid');
+  grid.innerHTML = '';
+  picks.forEach((act, i) => {
+    const el = document.createElement('div');
+    el.className = 'result-card';
+    el.innerHTML =
+      `<span class="result-emoji">${act.emoji}</span>` +
+      `<div class="result-info">` +
+        `<div class="result-name">${act.name}</div>` +
+        `<div class="result-tip">💡 ${act.tip}</div>` +
+      `</div>` +
+      `<div class="result-rank">${i + 1}</div>`;
+    grid.appendChild(el);
+  });
+
+  show('results');
+  setTimeout(launchConfetti, 300);
+  toast('🎉 Amazing — you did it!');
+}
+
+// ─────────────────────────────────────────────
+//  CONFETTI
+// ─────────────────────────────────────────────
+function launchConfetti() {
+  const cols = ['#7c6ef2','#ff7eb3','#4ecdc4','#ffe66d','#ff9a3c','#a99bf7','#80ed99'];
+  for (let i = 0; i < 90; i++) {
+    setTimeout(() => {
+      const el      = document.createElement('div');
+      el.className  = 'confetti-piece';
+      const size    = 6 + Math.random() * 9;
+      el.style.cssText = [
+        `left:${Math.random() * 100}vw`,
+        `width:${size}px`,
+        `height:${size}px`,
+        `background:${cols[Math.floor(Math.random() * cols.length)]}`,
+        `border-radius:${Math.random() > 0.45 ? '50%' : '2px'}`,
+        `--drift:${(Math.random() - 0.5) * 220}px`,
+        `animation-duration:${1.8 + Math.random() * 2}s`,
+        `animation-delay:${Math.random() * 0.6}s`,
+      ].join(';');
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4500);
+    }, i * 25);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  RESTART
+// ─────────────────────────────────────────────
+function restartApp() {
+  userName    = 'Explorer';
+  vibeAnswers = {};
+  vibeIdx     = 0;
+  swipePool   = [];
+  swipeIdx    = 0;
+  liked       = [];
+  finalPicks  = [];
+  document.getElementById('nameInput').value = '';
+  show('welcome');
+}
+
+// ─────────────────────────────────────────────
+//  KEYBOARD SHORTCUTS
+// ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (document.getElementById('swipe').classList.contains('active')) {
+    if (e.key === 'ArrowLeft'  || e.key === 'n') swipe(false);
+    if (e.key === 'ArrowRight' || e.key === 'y' || e.key === ' ') { e.preventDefault(); swipe(true); }
+  }
+  if (document.getElementById('vibecheck').classList.contains('active')) {
+    if (e.key === 'Enter') nextVibe();
+  }
+});
+</script>
+</body>
+</html>
